@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Локален админ панел</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%233d7bfd'/%3E%3Cpath d='M21 43l3-10 19-19 8 8-19 19-11 2z' fill='%23fff'/%3E%3Cpath d='M43 14l4-4 7 7-4 4' fill='%23cfe0ff'/%3E%3C/svg%3E">
+  <script>
+    // тема преди първото рисуване — без „светкавица“
+    try { document.documentElement.dataset.theme = localStorage.getItem('la-theme') || 'dark'; }
+    catch (e) { document.documentElement.dataset.theme = 'dark'; }
+  </script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand"><span class="logo">✎</span> <span>Локален админ</span></div>
+    <select id="projectSelect" title="Избор на проект"></select>
+    <button id="addProjectBtn" class="ghost" title="Добави проект по път">+ Проект</button>
+    <button id="scanBtn" class="ghost" title="Търсене на проекти отново">⟳</button>
+    <span class="spacer"></span>
+    <input id="devUrlInput" placeholder="Адрес на сайта (напр. http://localhost:4321)" />
+    <a id="openSite" href="#" target="_blank" rel="noopener" title="Отвори сайта">↗ Сайт</a>
+    <button id="themeBtn" class="ghost" title="Смяна на светла/тъмна тема">☀</button>
+  </header>
+
+  <div id="layout">
+    <aside id="sidebar">
+      <div id="collectionTabs"></div>
+      <div class="listActions">
+        <button id="newEntryBtn" class="primary wide">+ Нова статия</button>
+      </div>
+      <input id="searchBox" type="search" placeholder="Търсене в колекцията…" />
+      <ul id="entryList"></ul>
+    </aside>
+
+    <main id="main">
+      <div id="welcome">
+        <h1>Добре дошъл 👋</h1>
+        <ol>
+          <li>Избери проект от менюто горе (или добави нов с <b>+ Проект</b>).</li>
+          <li>Избери колекция (напр. <b>posts</b>) отляво.</li>
+          <li>Отвори статия за редакция или създай нова с <b>+ Нова статия</b>.</li>
+        </ol>
+        <p>Всичко се записва директно като файлове в папката на проекта — без Git,
+           без облак, без объркване между сайтовете. Полетата (heroImage, seoTitle,
+           категории…) се взимат от схемата на проекта и от съществуващите статии.
+           Качените снимки отиват в медийната папка (по подразбиране <code>public/uploads</code>).</p>
+      </div>
+
+      <div id="editor" hidden>
+        <div class="entryHead">
+          <h2 id="entryTitle">…</h2>
+          <div class="headBtns">
+            <button id="previewBtn" class="ghost">👁 Преглед</button>
+            <button id="imgBtn" class="ghost">🖼 Снимки</button>
+            <button id="deleteBtn" class="danger">Изтрий</button>
+            <button id="saveBtn" class="primary">💾 Запис</button>
+          </div>
+        </div>
+        <div id="fileBar">
+          <code id="filePath"></code>
+          <button id="copyPathBtn" class="ghost small" title="Копирай пътя на файла">Копирай пътя</button>
+        </div>
+        <div id="saveBar" hidden>
+          <span class="ok">✓ Записано</span>
+          <code id="saveBarPath"></code>
+          <a id="viewOnSite" href="#" target="_blank" rel="noopener" title="Отвори сайта в браузъра">↗ Виж в сайта</a>
+        </div>
+        <div id="fields"></div>
+        <div class="fieldsFoot">
+          <button id="addFieldBtn" class="ghost">+ Добави поле</button>
+        </div>
+        <div class="bodyHead">
+          <label class="bodyLabel">Съдържание (Markdown)</label>
+          <span id="wordCount" class="muted"></span>
+        </div>
+        <div id="toolbar">
+          <button data-cmd="h2" title="Заглавие (##)">H2</button>
+          <button data-cmd="h3" title="Подзаглавие (###)">H3</button>
+          <button data-cmd="bold" title="Удебелен (Ctrl+B)"><b>B</b></button>
+          <button data-cmd="italic" title="Курсив (Ctrl+I)"><i>I</i></button>
+          <button data-cmd="strike" title="Зачертален">S̶</button>
+          <span class="tbSep"></span>
+          <button data-cmd="code" title="Код в реда">‹›</button>
+          <button data-cmd="codeblock" title="Блок с код">▤</button>
+          <span class="tbSep"></span>
+          <button data-cmd="ul" title="Списък с точки">• —</button>
+          <button data-cmd="ol" title="Номериран списък">1. —</button>
+          <button data-cmd="quote" title="Цитат">❝</button>
+          <span class="tbSep"></span>
+          <button data-cmd="link" title="Връзка (Ctrl+K)">🔗</button>
+          <button data-cmd="image" title="Снимка в текста">🖼</button>
+          <button data-cmd="table" title="Таблица">⊞</button>
+          <button data-cmd="hr" title="Хоризонтална линия">—</button>
+        </div>
+        <div class="editorShell" id="editorShell">
+          <div id="hlLayer" aria-hidden="true"></div>
+          <textarea id="bodyArea" spellcheck="false" placeholder="Текстът на статията…"></textarea>
+        </div>
+        <div id="preview" hidden></div>
+        <div id="saveHint"></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" hidden></div>
+
+  <!-- Модал: нова статия -->
+  <div id="modalNew" class="modal" hidden>
+    <div class="modalBox">
+      <h3>Нова статия</h3>
+      <label>Заглавие</label>
+      <input id="newTitle" placeholder="напр. Как да изберем MP3 плейър" />
+      <label>Категория (подпапка)</label>
+      <select id="newCategory"></select>
+      <input id="newCategoryInput" placeholder="Нова категория…" hidden />
+      <label>Име на файла (слъг) — може на кирилица или латиница</label>
+      <input id="newSlug" placeholder="how-to-choose-mp3-player" />
+      <div class="modalBtns">
+        <button id="newCancel" class="ghost">Отказ</button>
+        <button id="newCreate" class="primary">Създай</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модал: снимки -->
+  <div id="modalImg" class="modal" hidden>
+    <div class="modalBox wide">
+      <h3 id="imgModalTitle">Снимки</h3>
+      <p class="hint" id="imgModalHint">Кликни на снимка, за да я вмъкнеш в текста на позицията на курсора.
+         Адресът ѝ ще е пътят за сайта (напр. <code>/uploads/IMG-1234.jpg</code>).</p>
+      <div id="imgGrid"></div>
+      <label class="uploadLabel">
+        <input type="file" id="uploadInput" accept="image/*,application/pdf,audio/*,video/*" multiple hidden />
+        <button id="uploadBtn" class="primary">⬆ Качи файлове</button>
+        <span id="uploadStatus"></span>
+      </label>
+      <div class="modalBtns">
+        <button id="imgClose" class="ghost">Затвори</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модал: добавяне на проект -->
+  <div id="modalAdd" class="modal" hidden>
+    <div class="modalBox">
+      <h3>Добави проект</h3>
+      <p class="hint">Пълен път до папката на проекта (папката, в която е <code>package.json</code>).</p>
+      <input id="addPath" placeholder="напр. /mnt/c/Users/fedia/Desktop/itpraktika-astro" />
+      <div class="modalBtns">
+        <button id="addCancel" class="ghost">Отказ</button>
+        <button id="addOk" class="primary">Добави</button>
+      </div>
+      <p id="addRootsHint" class="hint"></p>
+    </div>
+  </div>
+
+  <!-- Модал: добавяне на поле -->
+  <div id="modalField" class="modal" hidden>
+    <div class="modalBox">
+      <h3>Добави поле</h3>
+      <p class="hint">Полетата идват от схемата на проекта (<code>content.config.ts</code>),
+         от съществуващите статии и от стандартните за един блог.</p>
+      <input id="fieldSearch" type="search" placeholder="Търсене на поле…" />
+      <div id="fieldList"></div>
+      <label>Друго поле (собствено име)</label>
+      <input id="fieldCustom" placeholder="напр. myCustomField" />
+      <div class="modalBtns">
+        <button id="fieldCancel" class="ghost">Отказ</button>
+        <button id="fieldAddCustom" class="primary">Добави</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

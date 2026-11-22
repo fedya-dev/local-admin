@@ -1,0 +1,13 @@
+{
+  "name": "local-admin",
+  "version": "1.0.0",
+  "description": "Локален админ панел за статични сайтове (без зависимости)",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node admin.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

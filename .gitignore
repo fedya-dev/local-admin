@@ -1,0 +1,7 @@
+# личен конфиг — пътищата на проектите на всеки е различни
+local-admin.config.json
+
+# ОС / системни
+.DS_Store
+Thumbs.db
+*.log
